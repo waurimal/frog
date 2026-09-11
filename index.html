@@ -732,21 +732,44 @@
             let direction = i % 2 === 0 ? 1 : -1;
             let carSpeed = (Math.random() * 1.5 + 1) * levelSpeed * (canvas.width / 400); 
             
-            cars.push(createEntity(laneY, direction, carSpeed, carEmojis, 45, "car"));
-            setTimeout(() => { if(state === 'PLAYING') cars.push(createEntity(laneY, direction, carSpeed, carEmojis, 45, "car")); }, 1500 + Math.random() * 1000);
-            setTimeout(() => { if(state === 'PLAYING') cars.push(createEntity(laneY, direction, carSpeed, carEmojis, 45, "car")); }, 3000 + Math.random() * 1000);
+            // 화면 너비에 따라 3대를 일정한 간격으로 배치
+            let numCars = 3;
+            let spacing = (canvas.width + 200) / numCars; 
+            
+            for(let j=0; j<numCars; j++) {
+                let initialX = direction === 1 
+                    ? -100 + (j * spacing)
+                    : canvas.width + 100 - (j * spacing);
+                
+                let car = createEntity(laneY, direction, carSpeed, carEmojis, 45, "car");
+                car.x = initialX;
+                car.trackLength = spacing * numCars; // 래핑 루프 길이를 저장
+                cars.push(car);
+            }
         }
 
         // 통나무 생성 (3개 레인)
         const logEmojis = ["🪵", "🪵", "🐊"]; // 가끔 악어도 등장
         for(let i=0; i<3; i++) {
-            let logY = layout.riverTop + (layout.laneHeight * i); // 틈새 방지를 위해 레인 상단 기준으로 위치 변경
+            let logY = layout.riverTop + (layout.laneHeight * i); 
             let direction = i % 2 === 0 ? -1 : 1; 
             let logSpeed = (Math.random() * 1 + 0.8) * levelSpeed * (canvas.width / 400); 
             
-            logs.push(createEntity(logY, direction, logSpeed, logEmojis, 160, "log"));
-            setTimeout(() => { if(state === 'PLAYING') logs.push(createEntity(logY, direction, logSpeed, logEmojis, 160, "log")); }, 1800 + Math.random() * 800);
-            setTimeout(() => { if(state === 'PLAYING') logs.push(createEntity(logY, direction, logSpeed, logEmojis, 160, "log")); }, 3600 + Math.random() * 800);
+            // 화면 너비에 따라 3개를 일정한 간격으로 배치
+            let numLogs = 3;
+            let trackLen = canvas.width + 400; // 통나무 길이(160)를 고려하여 넉넉한 래핑 공간 확보
+            let spacing = trackLen / numLogs;
+            
+            for(let j=0; j<numLogs; j++) {
+                let initialX = direction === 1 
+                    ? -200 + (j * spacing)
+                    : canvas.width + 200 - (j * spacing);
+                
+                let log = createEntity(logY, direction, logSpeed, logEmojis, 160, "log");
+                log.x = initialX;
+                log.trackLength = trackLen; // 래핑 루프 길이를 저장
+                logs.push(log);
+            }
         }
     }
 
@@ -774,8 +797,9 @@
         // 자동차 업데이트 & 충돌 확인
         cars.forEach(car => {
             car.x += car.speed * car.dir;
-            if (car.dir === 1 && car.x > canvas.width + 50) car.x = -100;
-            if (car.dir === -1 && car.x < -100) car.x = canvas.width + 50;
+            // 지정된 간격만큼 이동하면 반대편으로 자연스럽게 래핑
+            if (car.dir === 1 && car.x > canvas.width + 100) car.x -= car.trackLength;
+            if (car.dir === -1 && car.x < -100) car.x += car.trackLength;
 
             if (!isDamaged && checkCollision(player, car, 0.7)) {
                 handleDamage("앗! 자동차에 부딪혔어요!");
@@ -790,8 +814,9 @@
 
         logs.forEach(log => {
             log.x += log.speed * log.dir;
-            if (log.dir === 1 && log.x > canvas.width + 100) log.x = -200; // 길이가 160이므로 넉넉하게 -200에서 리스폰
-            if (log.dir === -1 && log.x < -200) log.x = canvas.width + 100;
+            // 지정된 간격만큼 이동하면 반대편으로 자연스럽게 래핑 (빈틈 발생 방지)
+            if (log.dir === 1 && log.x > canvas.width + 200) log.x -= log.trackLength;
+            if (log.dir === -1 && log.x < -200) log.x += log.trackLength;
 
             if (!isDamaged && inRiver && checkCollision(player, log, 0.6)) {
                 if(log.emoji === "🐊") {
