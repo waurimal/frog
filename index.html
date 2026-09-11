@@ -732,35 +732,35 @@
             let direction = i % 2 === 0 ? 1 : -1;
             let carSpeed = (Math.random() * 1.5 + 1) * levelSpeed * (canvas.width / 400); 
             
-            cars.push(createEntity(laneY, direction, carSpeed, carEmojis, 45));
-            setTimeout(() => { if(state === 'PLAYING') cars.push(createEntity(laneY, direction, carSpeed, carEmojis, 45)); }, 1500 + Math.random() * 1000);
-            setTimeout(() => { if(state === 'PLAYING') cars.push(createEntity(laneY, direction, carSpeed, carEmojis, 45)); }, 3000 + Math.random() * 1000);
+            cars.push(createEntity(laneY, direction, carSpeed, carEmojis, 45, "car"));
+            setTimeout(() => { if(state === 'PLAYING') cars.push(createEntity(laneY, direction, carSpeed, carEmojis, 45, "car")); }, 1500 + Math.random() * 1000);
+            setTimeout(() => { if(state === 'PLAYING') cars.push(createEntity(laneY, direction, carSpeed, carEmojis, 45, "car")); }, 3000 + Math.random() * 1000);
         }
 
         // 통나무 생성 (3개 레인)
         const logEmojis = ["🪵", "🪵", "🐊"]; // 가끔 악어도 등장
         for(let i=0; i<3; i++) {
-            let laneY = layout.riverTop + (layout.laneHeight * i) + (layout.laneHeight / 2) - 17;
-            let direction = i % 2 === 0 ? -1 : 1; // 도로는 좌우교차, 강물은 반대로
+            let logY = layout.riverTop + (layout.laneHeight * i); // 틈새 방지를 위해 레인 상단 기준으로 위치 변경
+            let direction = i % 2 === 0 ? -1 : 1; 
             let logSpeed = (Math.random() * 1 + 0.8) * levelSpeed * (canvas.width / 400); 
             
-            // 통나무 길이를 대폭 늘림 (기존 80 -> 160)
-            logs.push(createEntity(laneY, direction, logSpeed, logEmojis, 160));
-            setTimeout(() => { if(state === 'PLAYING') logs.push(createEntity(laneY, direction, logSpeed, logEmojis, 160)); }, 1800 + Math.random() * 800);
-            setTimeout(() => { if(state === 'PLAYING') logs.push(createEntity(laneY, direction, logSpeed, logEmojis, 160)); }, 3600 + Math.random() * 800);
+            logs.push(createEntity(logY, direction, logSpeed, logEmojis, 160, "log"));
+            setTimeout(() => { if(state === 'PLAYING') logs.push(createEntity(logY, direction, logSpeed, logEmojis, 160, "log")); }, 1800 + Math.random() * 800);
+            setTimeout(() => { if(state === 'PLAYING') logs.push(createEntity(logY, direction, logSpeed, logEmojis, 160, "log")); }, 3600 + Math.random() * 800);
         }
     }
 
-    function createEntity(y, dir, speed, emojis, width) {
+    function createEntity(y, dir, speed, emojis, width, type = "car") {
         let emoji = emojis[Math.floor(Math.random() * emojis.length)];
-        // 악어(🐊)일 경우 이모지 크기에 맞춰 충돌 박스를 작게 설정하고, 통나무/자동차는 전달받은 width 사용
         let finalWidth = emoji === "🐊" ? 45 : width;
         let x = dir === 1 ? -finalWidth : canvas.width + finalWidth;
-        return { x, y, width: finalWidth, height: 35, speed, dir, emoji };
+        let finalHeight = type === "log" ? layout.laneHeight + 2 : 35; // 통나무는 틈이 없도록 히트박스를 레인 크기만큼 대폭 확장
+        return { x, y, width: finalWidth, height: finalHeight, speed, dir, emoji, type };
     }
 
     function update() {
         if (state !== 'PLAYING') return;
+        let isDamaged = false; // 한 프레임에 여러번 데미지 중복 적용 방지
 
         // 플레이어 이동
         if (keys.ArrowUp) player.y -= player.speed;
@@ -777,22 +777,26 @@
             if (car.dir === 1 && car.x > canvas.width + 50) car.x = -100;
             if (car.dir === -1 && car.x < -100) car.x = canvas.width + 50;
 
-            if (checkCollision(player, car, 0.7)) handleDamage("앗! 자동차에 부딪혔어요!");
+            if (!isDamaged && checkCollision(player, car, 0.7)) {
+                handleDamage("앗! 자동차에 부딪혔어요!");
+                isDamaged = true;
+            }
         });
 
         // 통나무 업데이트 & 강물 빠짐 확인
         let onLog = false;
         let playerCenterY = player.y + player.size / 2;
-        let inRiver = playerCenterY > layout.riverTop && playerCenterY < layout.riverBottom;
+        let inRiver = playerCenterY > layout.riverTop + 5 && playerCenterY < layout.riverBottom - 5; // 5px 안전 마진 추가
 
         logs.forEach(log => {
             log.x += log.speed * log.dir;
-            if (log.dir === 1 && log.x > canvas.width + 100) log.x = -150;
-            if (log.dir === -1 && log.x < -150) log.x = canvas.width + 100;
+            if (log.dir === 1 && log.x > canvas.width + 100) log.x = -200; // 길이가 160이므로 넉넉하게 -200에서 리스폰
+            if (log.dir === -1 && log.x < -200) log.x = canvas.width + 100;
 
-            if (inRiver && checkCollision(player, log, 0.6)) {
+            if (!isDamaged && inRiver && checkCollision(player, log, 0.6)) {
                 if(log.emoji === "🐊") {
                     handleDamage("앗! 악어에게 물렸어요!");
+                    isDamaged = true;
                 } else {
                     onLog = true;
                     // 통나무 방향으로 플레이어 이동 (마찰)
@@ -801,15 +805,19 @@
             }
         });
 
-        if (inRiver && !onLog) {
+        if (!isDamaged && inRiver && !onLog) {
             handleDamage("첨벙! 강물에 빠졌어요! 💦");
+            isDamaged = true;
         }
 
         // 정답 구역 확인
         targetZones.forEach(zone => {
-            if (player.y < zone.y + zone.height && player.x > zone.x && player.x < zone.x + zone.width) {
+            if (!isDamaged && player.y < zone.y + zone.height && player.x > zone.x && player.x < zone.x + zone.width) {
                 if (zone.isCorrect) handleCorrectAnswer();
-                else handleDamage(`땡! [${zone.word.kr}]이(가) 아니에요!`);
+                else {
+                    handleDamage(`땡! [${zone.word.kr}]이(가) 아니에요!`);
+                    isDamaged = true;
+                }
             }
         });
     }
@@ -900,10 +908,11 @@
             if (log.emoji === "🪵") {
                 ctx.fillStyle = '#8B4513';
                 ctx.beginPath();
-                ctx.roundRect(log.x, log.y, log.width, log.height, 10);
+                // 시각적으로 레인 간격이 보이도록 내부 여백(+2, -4) 부여 (실제 히트박스는 더 큼)
+                ctx.roundRect(log.x, log.y + 2, log.width, log.height - 4, 10);
                 ctx.fill();
-            } else {
-                ctx.fillText(log.emoji, log.x + log.width/2 - 17, log.y - 5);
+            } else { // 악어
+                ctx.fillText(log.emoji, log.x + log.width/2 - 17, log.y + log.height/2 - 17);
             }
         });
 
