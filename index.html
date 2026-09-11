@@ -744,17 +744,19 @@
             let direction = i % 2 === 0 ? -1 : 1; // 도로는 좌우교차, 강물은 반대로
             let logSpeed = (Math.random() * 1 + 0.8) * levelSpeed * (canvas.width / 400); 
             
-            // 통나무는 자동차보다 넓게
-            logs.push(createEntity(laneY, direction, logSpeed, logEmojis, 80));
-            setTimeout(() => { if(state === 'PLAYING') logs.push(createEntity(laneY, direction, logSpeed, logEmojis, 80)); }, 1800 + Math.random() * 800);
-            setTimeout(() => { if(state === 'PLAYING') logs.push(createEntity(laneY, direction, logSpeed, logEmojis, 80)); }, 3600 + Math.random() * 800);
+            // 통나무 길이를 대폭 늘림 (기존 80 -> 160)
+            logs.push(createEntity(laneY, direction, logSpeed, logEmojis, 160));
+            setTimeout(() => { if(state === 'PLAYING') logs.push(createEntity(laneY, direction, logSpeed, logEmojis, 160)); }, 1800 + Math.random() * 800);
+            setTimeout(() => { if(state === 'PLAYING') logs.push(createEntity(laneY, direction, logSpeed, logEmojis, 160)); }, 3600 + Math.random() * 800);
         }
     }
 
     function createEntity(y, dir, speed, emojis, width) {
-        let x = dir === 1 ? -width : canvas.width + width;
         let emoji = emojis[Math.floor(Math.random() * emojis.length)];
-        return { x, y, width: width, height: 35, speed, dir, emoji };
+        // 악어(🐊)일 경우 이모지 크기에 맞춰 충돌 박스를 작게 설정하고, 통나무/자동차는 전달받은 width 사용
+        let finalWidth = emoji === "🐊" ? 45 : width;
+        let x = dir === 1 ? -finalWidth : canvas.width + finalWidth;
+        return { x, y, width: finalWidth, height: 35, speed, dir, emoji };
     }
 
     function update() {
