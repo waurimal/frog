@@ -257,7 +257,7 @@
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // User's specific Firebase config
+    // 💡 선생님께서 제공해주신 정확한 Firebase 설정 (수정하지 마세요!)
     const firebaseConfig = {
         apiKey: "AIzaSyDHCnRrVE2dVuJpf77P-1oftGpczR5WDd4",
         authDomain: "eng-activity.firebaseapp.com",
@@ -268,8 +268,11 @@
         measurementId: "G-Z8YEJDLBJX"
     };
     
-    // Create unique app ID for document scopes if needed
+    // 💡 새로운 게임을 위한 DB 컬렉션 이름입니다.
+    // 만약 제일 처음에 만드셨던 원본 게임의 단어와 랭킹을 가져오고 싶으시다면
+    // 이 값을 'word-hopper-app' 으로 변경하시면 됩니다.
     const gameAppId = 'crossy-frog-english'; 
+    
     let db, auth, currentUser;
     let isFirebaseReady = false;
     let currentAdminPassword = "admin";
@@ -744,7 +747,7 @@
             };
         });
 
-        // Generate Cars (Road)
+        // Generate Cars (Road) with perfect looping spacing
         const carEmojis = ["🚗", "🚕", "🚙", "🚌", "🚓", "🚛"];
         for(let i=0; i<3; i++) {
             let laneY = layout.roadTop + (layout.laneHeight * i) + (layout.laneHeight / 2) - 17;
@@ -767,13 +770,13 @@
             }
         }
 
-        // Generate Logs & Crocodiles (River)
+        // Generate Logs & Crocodiles (River) with perfect looping spacing
         for(let i=0; i<3; i++) {
             let logY = layout.riverTop + (layout.laneHeight * i); 
             let direction = i % 2 === 0 ? -1 : 1; 
             let logSpeed = (Math.random() * 1 + 0.8) * levelSpeed * (canvas.width / 400); 
             
-            // 4 entities per lane to guarantee safe paths
+            // 4 entities per lane to guarantee safe paths and no empty gaps
             let numLogs = 4;
             let trackLen = canvas.width + 600; 
             let spacing = trackLen / numLogs;
@@ -786,7 +789,7 @@
                     : canvas.width + 200 - (j * spacing);
                 
                 let type = laneEmojis[j] === "🪵" ? "log" : "croc";
-                let w = type === "log" ? 160 : 45;
+                let w = type === "log" ? 160 : 45; // Log is wider!
                 let log = createEntity(logY, direction, logSpeed, laneEmojis[j], w, type);
                 log.x = initialX;
                 log.trackLength = trackLen; 
