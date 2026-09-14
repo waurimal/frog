@@ -14,7 +14,7 @@
             margin: 0;
             padding: 0;
             overflow: hidden;
-            touch-action: none; /* 모바일 새로고침/스크롤 방지 */
+            touch-action: none;
         }
 
         #game-container {
@@ -72,7 +72,6 @@
             box-shadow: 0 0 0 #c83349;
         }
 
-        /* 방향키 UI (모바일용) */
         #d-pad {
             position: absolute;
             bottom: 20px;
@@ -116,12 +115,11 @@
 <body>
 
 <div id="game-container">
-    <!-- 시작 화면 -->
     <div id="start-screen" class="overlay">
         <div class="bg-white p-6 rounded-3xl text-center text-gray-800 w-full max-w-sm border-4 border-green-400 relative flex flex-col max-h-[90vh]">
             <button id="open-admin-btn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl z-10">⚙️</button>
             <h1 class="text-4xl text-green-600 mb-2 mt-2">🐸 CROSSY FROG</h1>
-            <p class="text-gray-500 mb-4 text-sm">자동차를 피하고 통나무를 건너 정답으로!</p>
+            <p class="text-gray-500 mb-4 text-sm">차를 피하고 통나무를 타서 정답으로 쏙!</p>
             
             <div class="flex gap-2 mb-2">
                 <select id="grade-input" class="w-1/4 p-2 border-2 border-gray-300 rounded-xl font-bold text-center outline-none focus:border-green-400 bg-white">
@@ -158,7 +156,6 @@
         <div class="mt-4 text-white text-sm font-bold opacity-80">만든이: 곽현석(이의초등학교)</div>
     </div>
 
-    <!-- 관리자 비밀번호 확인 -->
     <div id="password-modal" class="overlay hidden z-50">
         <div class="bg-white p-6 rounded-3xl text-center text-gray-800 w-11/12 max-w-xs border-4 border-purple-400 shadow-2xl">
             <h2 class="text-2xl font-bold mb-4 text-purple-600">🔒 관리자 인증</h2>
@@ -171,7 +168,6 @@
         </div>
     </div>
 
-    <!-- 관리자 화면 -->
     <div id="admin-screen" class="overlay hidden z-40">
         <div class="bg-white p-6 rounded-3xl text-gray-800 w-full max-w-md border-4 border-purple-400 flex flex-col h-5/6">
             <div class="flex justify-between items-center mb-4">
@@ -185,7 +181,6 @@
                 <button id="tab-settings" class="flex-1 font-bold text-gray-400 hover:bg-gray-100 rounded py-1 transition-colors">설정</button>
             </div>
 
-            <!-- 단어 관리 탭 -->
             <div id="admin-word-section" class="flex flex-col flex-grow overflow-hidden">
                 <div class="mb-4 bg-gray-50 p-3 rounded-xl border border-gray-200">
                     <div class="flex gap-2 mb-2">
@@ -200,7 +195,6 @@
                 </div>
             </div>
 
-            <!-- 기록 관리 탭 -->
             <div id="admin-record-section" class="flex flex-col flex-grow overflow-hidden hidden">
                 <select id="admin-record-unit" class="w-full p-2 mb-2 border-2 border-gray-300 rounded font-bold text-center outline-none bg-white">
                     <option value="all">전체 단원 랭킹</option>
@@ -212,7 +206,6 @@
                 </div>
             </div>
 
-            <!-- 설정 탭 -->
             <div id="admin-settings-section" class="flex flex-col flex-grow overflow-hidden hidden">
                 <div class="bg-gray-100 flex-grow rounded-xl p-4">
                     <h3 class="font-bold text-gray-700 mb-2">관리자 비밀번호 변경</h3>
@@ -224,8 +217,7 @@
         </div>
     </div>
 
-    <!-- 게임 오버 화면 -->
-    <div id="game-over-screen" class="overlay hidden z-20">
+    <div id="game-over-screen" class="overlay hidden">
         <div class="bg-white p-8 rounded-3xl text-center text-gray-800 w-11/12 max-w-sm border-4 border-red-400 flex flex-col max-h-[90vh]">
             <h1 class="text-4xl text-red-500 mb-2">앗, 게임 오버! 💦</h1>
             <p class="text-2xl mb-4 text-gray-700">내 점수: <span id="final-score" class="text-blue-500 font-bold">0</span>점</p>
@@ -244,17 +236,14 @@
         </div>
     </div>
 
-    <!-- 토스트 메시지 -->
     <div id="toast-message" class="absolute top-1/4 left-1/2 transform -translate-x-1/2 bg-yellow-400 text-yellow-900 px-6 py-2 rounded-full font-bold text-xl shadow-lg transition-opacity duration-300 opacity-0 pointer-events-none z-30 whitespace-nowrap">
         정답입니다! +10
     </div>
 
-    <button id="exit-game-btn" class="absolute top-4 right-4 bg-gray-800 bg-opacity-70 text-white px-4 py-2 rounded-full font-bold shadow-md z-10 hidden hover:bg-opacity-90 border-2 border-white transition-all">나가기 🚪</button>
+    <button id="exit-game-btn" class="absolute top-4 right-4 bg-gray-800 bg-opacity-70 text-white px-4 py-2 rounded-full font-bold shadow-md z-30 hidden hover:bg-opacity-90 border-2 border-white transition-all">나가기 🚪</button>
 
-    <!-- 게임 캔버스 -->
     <canvas id="gameCanvas"></canvas>
 
-    <!-- 모바일 방향키 -->
     <div id="d-pad">
         <div class="d-btn" id="btn-up">⬆️</div>
         <div class="d-btn" id="btn-left">⬅️</div>
@@ -268,12 +257,7 @@
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // 공통 앱 ID
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'frogger-new-app';
-    
-    // ==========================================
-    // Firebase 설정
-    // ==========================================
+    // User's specific Firebase config
     const firebaseConfig = {
         apiKey: "AIzaSyDHCnRrVE2dVuJpf77P-1oftGpczR5WDd4",
         authDomain: "eng-activity.firebaseapp.com",
@@ -284,6 +268,8 @@
         measurementId: "G-Z8YEJDLBJX"
     };
     
+    // Create unique app ID for document scopes if needed
+    const gameAppId = 'crossy-frog-english'; 
     let db, auth, currentUser;
     let isFirebaseReady = false;
     let currentAdminPassword = "admin";
@@ -298,7 +284,6 @@
         { unit: 3, kr: "선생님", en: "Teacher" }, { unit: 3, kr: "집", en: "House" }
     ];
 
-    // UI 요소 매핑
     const screens = {
         start: document.getElementById('start-screen'),
         admin: document.getElementById('admin-screen'),
@@ -332,7 +317,6 @@
         pwdConfirmBtn: document.getElementById('pwd-confirm-btn')
     };
 
-    // Firebase 초기화 함수
     async function initFirebase() {
         try {
             const app = initializeApp(firebaseConfig);
@@ -351,37 +335,43 @@
                 }
             });
         } catch (error) {
-            console.error("Firebase 연결 실패 (API 키를 확인하세요) :", error);
+            console.error("Firebase Auth Error:", error);
             wordList = [...defaultWords];
             updateUnitSelects();
             enableStartButton();
-            screens.startLeaderboardList.innerHTML = '<p class="text-center text-red-400">오프라인 모드입니다. Firebase 키를 입력해주세요.</p>';
+            screens.startLeaderboardList.innerHTML = '<p class="text-center text-red-400">오프라인 모드입니다.</p>';
         }
     }
+    
     initFirebase();
 
     async function fetchAdminSettings() {
         try {
-            const docSnap = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'admin'));
+            const docSnap = await getDoc(doc(db, 'artifacts', gameAppId, 'public', 'data', 'settings', 'admin'));
             if (docSnap.exists() && docSnap.data().password) {
                 currentAdminPassword = docSnap.data().password;
             }
-        } catch(e) { console.error("비밀번호 로드 실패"); }
+        } catch(e) {
+            console.error("비밀번호 로드 실패");
+        }
     }
 
     async function fetchWords() {
         if (!currentUser) return;
         try {
-            const wordsRef = collection(db, 'artifacts', appId, 'public', 'data', 'words');
+            const wordsRef = collection(db, 'artifacts', gameAppId, 'public', 'data', 'words');
             const snapshot = await getDocs(wordsRef);
             wordList = [];
-            snapshot.forEach(doc => wordList.push({ id: doc.id, ...doc.data() }));
+            snapshot.forEach(doc => {
+                wordList.push({ id: doc.id, ...doc.data() });
+            });
 
             if (wordList.length === 0) {
                 for (let w of defaultWords) { await addDoc(wordsRef, w); }
                 await fetchWords();
                 return;
             }
+
             updateUnitSelects();
             enableStartButton();
             renderAdminWordList();
@@ -394,6 +384,7 @@
 
     function updateUnitSelects() {
         const units = [...new Set(wordList.map(w => parseInt(w.unit)))].sort((a, b) => a - b);
+        
         [screens.unitSelect, screens.gameoverRecordUnit, screens.adminRecordUnit, screens.startRecordUnit].forEach(select => {
             if(!select) return;
             while (select.options.length > 1) { select.remove(1); }
@@ -425,6 +416,7 @@
     function renderAdminWordList() {
         screens.adminWordList.innerHTML = '';
         const sorted = [...wordList].sort((a, b) => a.unit - b.unit || a.kr.localeCompare(b.kr));
+        
         sorted.forEach(word => {
             const li = document.createElement('li');
             li.className = 'flex justify-between items-center bg-white p-2 rounded shadow-sm';
@@ -453,7 +445,7 @@
 
         document.getElementById('add-word-btn').disabled = true;
         try {
-            const wordsRef = collection(db, 'artifacts', appId, 'public', 'data', 'words');
+            const wordsRef = collection(db, 'artifacts', gameAppId, 'public', 'data', 'words');
             const lines = bulkText.split('\n');
             let addedCount = 0;
 
@@ -477,25 +469,34 @@
 
     async function deleteWord(id) {
         if (!currentUser) return;
-        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'words', id));
+        await deleteDoc(doc(db, 'artifacts', gameAppId, 'public', 'data', 'words', id));
         await fetchWords();
     }
 
-    // 관리자 모드 이벤트 리스너들
     document.getElementById('open-admin-btn').addEventListener('click', () => {
         screens.adminPassword.value = '';
         screens.passwordModal.classList.remove('hidden');
     });
-    screens.pwdCancelBtn.addEventListener('click', () => screens.passwordModal.classList.add('hidden'));
+    
+    screens.pwdCancelBtn.addEventListener('click', () => {
+        screens.passwordModal.classList.add('hidden');
+    });
+
     screens.pwdConfirmBtn.addEventListener('click', () => {
         if (screens.adminPassword.value === currentAdminPassword) {
             screens.passwordModal.classList.add('hidden');
             screens.admin.classList.remove('hidden');
             renderAdminWordList();
             fetchAdminRecords();
-        } else { showToast("비밀번호가 틀렸습니다.", true); }
+        } else {
+            showToast("비밀번호가 틀렸습니다.", true);
+        }
     });
-    screens.adminPassword.addEventListener('keyup', (e) => { if (e.key === 'Enter') screens.pwdConfirmBtn.click(); });
+
+    screens.adminPassword.addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') screens.pwdConfirmBtn.click();
+    });
+
     document.getElementById('close-admin-btn').addEventListener('click', () => screens.admin.classList.add('hidden'));
     document.getElementById('add-word-btn').addEventListener('click', addWord);
 
@@ -507,6 +508,7 @@
         screens.tabRecord.className = 'flex-1 font-bold text-gray-400 hover:bg-gray-100 rounded py-1 transition-colors';
         screens.tabSettings.className = 'flex-1 font-bold text-gray-400 hover:bg-gray-100 rounded py-1 transition-colors';
     });
+
     screens.tabRecord.addEventListener('click', () => {
         screens.adminRecordSection.classList.remove('hidden');
         screens.adminWordSection.classList.add('hidden');
@@ -516,6 +518,7 @@
         screens.tabSettings.className = 'flex-1 font-bold text-gray-400 hover:bg-gray-100 rounded py-1 transition-colors';
         fetchAdminRecords();
     });
+
     screens.tabSettings.addEventListener('click', () => {
         screens.adminSettingsSection.classList.remove('hidden');
         screens.adminWordSection.classList.add('hidden');
@@ -530,12 +533,15 @@
         if(!currentUser) return;
         const newPwd = document.getElementById('new-admin-password-input').value.trim();
         if(!newPwd) { showToast("비밀번호를 입력하세요", true); return; }
+        
         try {
-            const pwdDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'admin');
+            const pwdDocRef = doc(db, 'artifacts', gameAppId, 'public', 'data', 'settings', 'admin');
             await setDoc(pwdDocRef, { password: newPwd }, { merge: true });
             currentAdminPassword = newPwd;
             showToast("비밀번호가 변경되었습니다!");
-        } catch(e) { showToast("비밀번호 변경 실패", true); }
+        } catch(e) {
+            showToast("비밀번호 변경 실패", true);
+        }
     });
 
     async function fetchAdminRecords() {
@@ -543,7 +549,7 @@
         const selectedUnit = screens.adminRecordUnit.value;
         screens.adminRecordList.innerHTML = '<p class="text-center text-gray-500 mt-4">기록을 불러오는 중...</p>';
         try {
-            const leaderboardRef = collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard');
+            const leaderboardRef = collection(db, 'artifacts', gameAppId, 'public', 'data', 'leaderboard');
             const snapshot = await getDocs(leaderboardRef);
             let records = [];
             snapshot.forEach(doc => {
@@ -552,6 +558,7 @@
                     records.push({ id: doc.id, ...data });
                 }
             });
+            
             records.sort((a, b) => b.score - a.score);
             screens.adminRecordList.innerHTML = '';
             
@@ -559,6 +566,7 @@
                 screens.adminRecordList.innerHTML = '<p class="text-center text-gray-500 mt-4">해당 단원의 랭킹 기록이 없습니다.</p>';
                 return;
             }
+            
             records.forEach((record, index) => {
                 const li = document.createElement('li');
                 li.className = 'flex justify-between items-center bg-white p-2 rounded shadow-sm';
@@ -574,13 +582,16 @@
                 delBtn.className = 'text-gray-400 hover:text-red-600 font-bold px-2';
                 delBtn.innerText = '삭제';
                 delBtn.onclick = async () => {
-                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'leaderboard', record.id));
-                    fetchAdminRecords(); renderStartLeaderboard(); 
+                    await deleteDoc(doc(db, 'artifacts', gameAppId, 'public', 'data', 'leaderboard', record.id));
+                    fetchAdminRecords(); 
+                    renderStartLeaderboard(); 
                 };
                 li.appendChild(delBtn);
                 screens.adminRecordList.appendChild(li);
             });
-        } catch (e) { screens.adminRecordList.innerHTML = '<p class="text-center text-red-500">불러오기 실패</p>'; }
+        } catch (e) {
+            screens.adminRecordList.innerHTML = '<p class="text-center text-red-500">불러오기 실패</p>';
+        }
     }
     screens.adminRecordUnit.addEventListener('change', fetchAdminRecords);
 
@@ -591,13 +602,16 @@
         }
         listElement.innerHTML = '<p class="text-center text-gray-400">기록 불러오는 중...</p>';
         try {
-            const leaderboardRef = collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard');
+            const leaderboardRef = collection(db, 'artifacts', gameAppId, 'public', 'data', 'leaderboard');
             const snapshot = await getDocs(leaderboardRef);
             let records = [];
             snapshot.forEach(doc => {
                 const data = doc.data();
-                if(unitValue === 'all' || parseInt(data.unit) === parseInt(unitValue)) records.push(data);
+                if(unitValue === 'all' || parseInt(data.unit) === parseInt(unitValue)) {
+                    records.push(data);
+                }
             });
+
             records.sort((a, b) => b.score - a.score);
             const top5 = records.slice(0, 5);
 
@@ -613,12 +627,16 @@
                     listElement.appendChild(div);
                 });
             }
-        } catch(e) { listElement.innerHTML = '<p class="text-center text-red-400">기록을 불러오지 못했습니다.</p>'; }
+        } catch(e) {
+            listElement.innerHTML = '<p class="text-center text-red-400">기록을 불러오지 못했습니다.</p>';
+        }
     }
-    async function renderStartLeaderboard() { await fetchAndRenderLeaderboard(screens.startRecordUnit.value, screens.startLeaderboardList); }
+
+    async function renderStartLeaderboard() {
+        await fetchAndRenderLeaderboard(screens.startRecordUnit.value, screens.startLeaderboardList);
+    }
     screens.startRecordUnit.addEventListener('change', renderStartLeaderboard);
     screens.gameoverRecordUnit.addEventListener('change', () => fetchAndRenderLeaderboard(screens.gameoverRecordUnit.value, screens.leaderboardList));
-
 
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
@@ -629,57 +647,57 @@
     let levelSpeed = 1;
     let currentWord = null;
     let targetZones = [];
+    
     let cars = [];
-    let logs = []; // 통나무 배열 추가
+    let logs = []; // Contains both logs and crocodiles
+    
     let playerInfo = { gradeNum: "", classNum: "", studentNum: "", name: "", maskedName: "", unit: "all" };
     let gameWordList = [];
     let keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
 
-    // 레이아웃 구조체 (도로와 강물 영역 분리)
     let layout = { 
-        laneHeight: 0, 
-        targetY: 0,
-        riverTop: 0, riverBottom: 0, 
-        midSafeY: 0,
-        roadTop: 0, roadBottom: 0, 
-        startSafeY: 0 
+        safeBottomY: 0, roadBottom: 0, roadTop: 0, 
+        riverBottom: 0, riverTop: 0, laneHeight: 0, 
+        zoneY: 0, zoneHeight: 0 
     };
 
     const player = {
-        x: 0, y: 0, size: 30, speed: 5, emoji: "🐸", // 개구리로 변경
+        x: 0, y: 0, size: 30, speed: 5, emoji: "🐸",
         reset: function() {
             this.x = canvas.width / 2 - this.size / 2;
-            this.y = layout.startSafeY + (layout.laneHeight / 2) - (this.size / 2);
+            this.y = layout.safeBottomY - layout.laneHeight / 2 - this.size / 2;
         }
     };
 
     function recalculateLayout() {
         const isMobile = window.innerWidth <= 800;
         const bottomSafeSpace = isMobile ? 220 : 50; 
-        const playAreaHeight = canvas.height - bottomSafeSpace - 70; // 70은 상단 HUD 영역
+        const availableHeight = canvas.height - bottomSafeSpace;
 
-        // 게임을 총 9개의 가로 레인으로 나눕니다.
-        // 0: 정답 구역 / 1: 강물 위쪽 안전지대 / 2,3,4: 강물(통나무) / 5: 중간 안전지대 / 6,7,8: 도로(자동차) / 9: 시작 지점
-        layout.laneHeight = playAreaHeight / 10; 
-        const startY = 70;
+        // Total 7 virtual rows: 1 Safe bottom, 3 Road, 3 River
+        layout.laneHeight = availableHeight / 7.5; 
+        
+        layout.safeBottomY = canvas.height - bottomSafeSpace;
+        
+        // Road Section
+        layout.roadBottom = layout.safeBottomY - layout.laneHeight; 
+        layout.roadTop = layout.roadBottom - (layout.laneHeight * 3); 
+        
+        // River Section
+        layout.riverBottom = layout.roadTop;
+        layout.riverTop = layout.riverBottom - (layout.laneHeight * 3);
 
-        layout.targetY = startY; 
-        // 강물 구역 (레인 2,3,4)
-        layout.riverTop = startY + (layout.laneHeight * 2);
-        layout.riverBottom = startY + (layout.laneHeight * 5);
-        layout.midSafeY = startY + (layout.laneHeight * 5);
-        // 도로 구역 (레인 6,7,8)
-        layout.roadTop = startY + (layout.laneHeight * 6);
-        layout.roadBottom = startY + (layout.laneHeight * 9);
-        layout.startSafeY = startY + (layout.laneHeight * 9);
+        // Word Target Zones
+        layout.zoneHeight = Math.min(60, canvas.height * 0.08);
+        layout.zoneY = layout.riverTop - layout.zoneHeight - 10; 
 
         if (targetZones.length > 0) {
             const zoneWidth = (canvas.width - 20) / 5 - 4; 
             targetZones.forEach((zone, index) => {
                 zone.width = zoneWidth;
-                zone.height = layout.laneHeight * 1.5; // 정답 구역 높이
+                zone.height = layout.zoneHeight;
                 zone.x = 10 + index * (zoneWidth + 4);
-                zone.y = layout.targetY;
+                zone.y = layout.zoneY;
             });
         }
     }
@@ -700,7 +718,6 @@
         cars = [];
         logs = [];
         
-        // 단어 세팅
         const targetIndex = Math.floor(Math.random() * gameWordList.length);
         currentWord = gameWordList[targetIndex];
 
@@ -711,28 +728,28 @@
                 distractors.push(gameWordList[rIdx]);
             }
         }
+
         let options = [currentWord, ...distractors].sort(() => Math.random() - 0.5);
 
         const zoneWidth = (canvas.width - 20) / 5 - 4;
         targetZones = options.map((opt, index) => {
             return {
                 x: 10 + index * (zoneWidth + 4),
-                y: layout.targetY,
+                y: layout.zoneY,
                 width: zoneWidth,
-                height: layout.laneHeight * 1.5,
+                height: layout.zoneHeight,
                 word: opt,
                 isCorrect: opt.kr === currentWord.kr
             };
         });
 
-        // 자동차 생성 (3개 레인)
+        // Generate Cars (Road)
         const carEmojis = ["🚗", "🚕", "🚙", "🚌", "🚓", "🚛"];
         for(let i=0; i<3; i++) {
             let laneY = layout.roadTop + (layout.laneHeight * i) + (layout.laneHeight / 2) - 17;
             let direction = i % 2 === 0 ? 1 : -1;
             let carSpeed = (Math.random() * 1.5 + 1) * levelSpeed * (canvas.width / 400); 
             
-            // 화면 너비에 따라 3대를 일정한 간격으로 배치
             let numCars = 3;
             let spacing = (canvas.width + 200) / numCars; 
             
@@ -741,157 +758,155 @@
                     ? -100 + (j * spacing)
                     : canvas.width + 100 - (j * spacing);
                 
-                let car = createEntity(laneY, direction, carSpeed, carEmojis, 45, "car");
+                let randomCar = carEmojis[Math.floor(Math.random() * carEmojis.length)];
+                let car = createEntity(laneY, direction, carSpeed, randomCar, 45, "car");
                 car.x = initialX;
-                car.trackLength = spacing * numCars; // 래핑 루프 길이를 저장
+                car.trackLength = spacing * numCars; 
                 cars.push(car);
             }
         }
 
-        // 통나무 생성 (3개 레인)
-        const logEmojis = ["🪵", "🪵", "🐊"]; // 가끔 악어도 등장
+        // Generate Logs & Crocodiles (River)
         for(let i=0; i<3; i++) {
             let logY = layout.riverTop + (layout.laneHeight * i); 
             let direction = i % 2 === 0 ? -1 : 1; 
             let logSpeed = (Math.random() * 1 + 0.8) * levelSpeed * (canvas.width / 400); 
             
-            // 화면 너비에 따라 3개를 일정한 간격으로 배치
-            let numLogs = 3;
-            let trackLen = canvas.width + 400; // 통나무 길이(160)를 고려하여 넉넉한 래핑 공간 확보
+            // 4 entities per lane to guarantee safe paths
+            let numLogs = 4;
+            let trackLen = canvas.width + 600; 
             let spacing = trackLen / numLogs;
+            
+            let laneEmojis = ["🪵", "🪵", "🪵", "🐊"].sort(() => Math.random() - 0.5);
             
             for(let j=0; j<numLogs; j++) {
                 let initialX = direction === 1 
                     ? -200 + (j * spacing)
                     : canvas.width + 200 - (j * spacing);
                 
-                let log = createEntity(logY, direction, logSpeed, logEmojis, 160, "log");
+                let type = laneEmojis[j] === "🪵" ? "log" : "croc";
+                let w = type === "log" ? 160 : 45;
+                let log = createEntity(logY, direction, logSpeed, laneEmojis[j], w, type);
                 log.x = initialX;
-                log.trackLength = trackLen; // 래핑 루프 길이를 저장
+                log.trackLength = trackLen; 
                 logs.push(log);
             }
         }
     }
 
-    function createEntity(y, dir, speed, emojis, width, type = "car") {
-        let emoji = emojis[Math.floor(Math.random() * emojis.length)];
-        let finalWidth = emoji === "🐊" ? 45 : width;
-        let x = dir === 1 ? -finalWidth : canvas.width + finalWidth;
-        let finalHeight = type === "log" ? layout.laneHeight + 2 : 35; // 통나무는 틈이 없도록 히트박스를 레인 크기만큼 대폭 확장
-        return { x, y, width: finalWidth, height: finalHeight, speed, dir, emoji, type };
+    function createEntity(y, dir, speed, emoji, width, type = "car") {
+        return { x: 0, y, width: width, height: 35, speed, dir, emoji, type, trackLength: 0 };
     }
 
     function update() {
         if (state !== 'PLAYING') return;
-        let isDamaged = false; // 한 프레임에 여러번 데미지 중복 적용 방지
 
-        // 플레이어 이동
         if (keys.ArrowUp) player.y -= player.speed;
         if (keys.ArrowDown) player.y += player.speed;
         if (keys.ArrowLeft) player.x -= player.speed;
         if (keys.ArrowRight) player.x += player.speed;
 
-        player.x = Math.max(10, Math.min(canvas.width - 20, player.x));
-        player.y = Math.max(10, Math.min(canvas.height - 20, player.y));
+        player.x = Math.max(0, Math.min(canvas.width - player.size, player.x));
+        player.y = Math.max(0, Math.min(canvas.height - player.size, player.y));
 
-        // 자동차 업데이트 & 충돌 확인
+        // Cars Movement & Wrapping
         cars.forEach(car => {
             car.x += car.speed * car.dir;
-            // 지정된 간격만큼 이동하면 반대편으로 자연스럽게 래핑
             if (car.dir === 1 && car.x > canvas.width + 100) car.x -= car.trackLength;
             if (car.dir === -1 && car.x < -100) car.x += car.trackLength;
 
-            if (!isDamaged && checkCollision(player, car, 0.7)) {
-                handleDamage("앗! 자동차에 부딪혔어요!");
-                isDamaged = true;
-            }
+            if (checkCollision(player, car, 0.7)) handleDamage("앗! 자동차에 부딪혔어요! 💥");
         });
 
-        // 통나무 업데이트 & 강물 빠짐 확인
-        let onLog = false;
-        let playerCenterY = player.y + player.size / 2;
-        let inRiver = playerCenterY > layout.riverTop + 5 && playerCenterY < layout.riverBottom - 5; // 5px 안전 마진 추가
+        // Logs & Crocodiles Movement & Wrapping
+        let inRiver = player.y + player.size > layout.riverTop && player.y < layout.riverBottom;
+        let safeOnLog = false;
+        let deadByCroc = false;
 
-        logs.forEach(log => {
-            log.x += log.speed * log.dir;
-            // 지정된 간격만큼 이동하면 반대편으로 자연스럽게 래핑 (빈틈 발생 방지)
-            if (log.dir === 1 && log.x > canvas.width + 200) log.x -= log.trackLength;
-            if (log.dir === -1 && log.x < -200) log.x += log.trackLength;
+        logs.forEach(entity => {
+            entity.x += entity.speed * entity.dir;
+            if (entity.dir === 1 && entity.x > canvas.width + 300) entity.x -= entity.trackLength;
+            if (entity.dir === -1 && entity.x < -300) entity.x += entity.trackLength;
 
-            if (!isDamaged && inRiver && checkCollision(player, log, 0.6)) {
-                if(log.emoji === "🐊") {
-                    handleDamage("앗! 악어에게 물렸어요!");
-                    isDamaged = true;
-                } else {
-                    onLog = true;
-                    // 통나무 방향으로 플레이어 이동 (마찰)
-                    player.x += log.speed * log.dir;
+            if (inRiver) {
+                let isLog = entity.type === "log";
+                // Generous vertical hitbox for logs to cover lane gaps
+                let hitY = isLog ? entity.y - 10 : entity.y; 
+                let hitH = isLog ? layout.laneHeight + 20 : entity.height;
+                
+                if (player.x < entity.x + entity.width && 
+                    player.x + player.size > entity.x &&
+                    player.y < hitY + hitH && 
+                    player.y + player.size > hitY) {
+                    
+                    if (isLog) {
+                        safeOnLog = true;
+                        player.x += entity.speed * entity.dir; // Ride the log
+                    } else if (entity.type === "croc") {
+                        deadByCroc = true;
+                    }
                 }
             }
         });
 
-        if (!isDamaged && inRiver && !onLog) {
-            handleDamage("첨벙! 강물에 빠졌어요! 💦");
-            isDamaged = true;
+        // River Death Logic
+        if (inRiver) {
+            if (deadByCroc) {
+                handleDamage("앗! 악어에게 물렸어요! 🐊");
+            } else if (!safeOnLog) {
+                handleDamage("앗! 강물에 빠졌어요! 💦");
+            }
         }
 
-        // 정답 구역 확인
+        // Target Zones (Words) Logic
         targetZones.forEach(zone => {
-            if (!isDamaged && player.y < zone.y + zone.height && player.x > zone.x && player.x < zone.x + zone.width) {
+            if (player.y < zone.y + zone.height && player.x + player.size > zone.x && player.x < zone.x + zone.width) {
                 if (zone.isCorrect) handleCorrectAnswer();
-                else {
-                    handleDamage(`땡! [${zone.word.kr}]이(가) 아니에요!`);
-                    isDamaged = true;
-                }
+                else handleDamage(`땡! [${zone.word.kr}]이(가) 아니에요!`);
             }
         });
     }
 
     function checkCollision(p, rect, factor = 1) {
-        const pSize = p.size * factor; // 히트박스 조금 관대하게
-        const px = p.x + (p.size - pSize)/2;
-        const py = p.y + (p.size - pSize)/2;
-        return ( px < rect.x + rect.width && px + pSize > rect.x && py < rect.y + rect.height && py + pSize > rect.y );
+        const pSize = p.size * factor;
+        const offset = (p.size - pSize) / 2;
+        return ( p.x + offset < rect.x + rect.width && p.x + offset + pSize > rect.x && 
+                 p.y + offset < rect.y + rect.height && p.y + offset + pSize > rect.y );
     }
 
     function draw() {
-        // 배경 (기본 안전지대 색상)
+        // Clear canvas with base background (Safe grass)
         ctx.fillStyle = '#a8e6cf';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // 강물 그리기
-        ctx.fillStyle = '#3b82f6'; // 파란색
-        ctx.fillRect(0, layout.riverTop, canvas.width, layout.riverBottom - layout.riverTop);
-        // 강물 물결 이펙트 간단히
-        ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-        ctx.lineWidth = 2;
-        for(let i=0; i<5; i++) {
-            ctx.beginPath();
-            ctx.moveTo(Math.random()*canvas.width, layout.riverTop + Math.random()*(layout.riverBottom - layout.riverTop));
-            ctx.lineTo(Math.random()*canvas.width + 20, layout.riverTop + Math.random()*(layout.riverBottom - layout.riverTop));
-            ctx.stroke();
-        }
-
-        // 도로 그리기
-        ctx.fillStyle = '#555555'; // 짙은 회색
+        // Draw Road (Gray)
+        ctx.fillStyle = '#666';
         ctx.fillRect(0, layout.roadTop, canvas.width, layout.roadBottom - layout.roadTop);
         
-        // 차선 그리기
-        ctx.strokeStyle = 'white';
+        // Draw River (Blue)
+        ctx.fillStyle = '#3b82f6';
+        ctx.fillRect(0, layout.riverTop, canvas.width, layout.riverBottom - layout.riverTop);
+
+        // Draw Lane Dashes on Road
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
         ctx.lineWidth = 2;
         ctx.setLineDash([15, 15]);
         for(let i = 1; i < 3; i++) {
             let lineY = layout.roadTop + (layout.laneHeight * i);
-            ctx.beginPath(); ctx.moveTo(0, lineY); ctx.lineTo(canvas.width, lineY); ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(0, lineY);
+            ctx.lineTo(canvas.width, lineY);
+            ctx.stroke();
         }
         ctx.setLineDash([]);
 
         if (state !== 'PLAYING') return;
 
-        // 상단 HUD
+        // UI Header Background
         ctx.fillStyle = 'rgba(255,255,255,0.85)';
         ctx.fillRect(0, 0, canvas.width, 70);
         
+        // UI Header Text
         ctx.fillStyle = '#333';
         ctx.font = 'bold 24px Jua';
         ctx.textAlign = 'center';
@@ -905,7 +920,7 @@
         ctx.fillStyle = '#ef4444';
         ctx.fillText("❤️".repeat(lives), 15, 50);
 
-        // 정답 구역 (목표물)
+        // Draw Word Targets
         targetZones.forEach(zone => {
             ctx.fillStyle = 'white';
             ctx.beginPath();
@@ -924,27 +939,23 @@
             ctx.fillText(zone.word.en, zone.x + zone.width/2, zone.y + zone.height/2);
         });
 
-        // 통나무 그리기
+        // Draw Logs and Crocodiles
         ctx.font = '35px Arial';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
-        logs.forEach(log => {
-            // 통나무 배경 갈색
-            if (log.emoji === "🪵") {
-                ctx.fillStyle = '#8B4513';
-                ctx.beginPath();
-                // 시각적으로 레인 간격이 보이도록 내부 여백(+2, -4) 부여 (실제 히트박스는 더 큼)
-                ctx.roundRect(log.x, log.y + 2, log.width, log.height - 4, 10);
-                ctx.fill();
-            } else { // 악어
-                ctx.fillText(log.emoji, log.x + log.width/2 - 17, log.y + log.height/2 - 17);
+        logs.forEach(entity => {
+            if (entity.type === "log") {
+                // Log is wider, repeat emoji to simulate length
+                ctx.fillText(entity.emoji + entity.emoji, entity.x, entity.y + layout.laneHeight/2 - 17);
+            } else {
+                ctx.fillText(entity.emoji, entity.x, entity.y + layout.laneHeight/2 - 17);
             }
         });
 
-        // 자동차 그리기
+        // Draw Cars
         cars.forEach(car => ctx.fillText(car.emoji, car.x, car.y - 5));
 
-        // 플레이어 그리기
+        // Draw Player (Frog)
         ctx.font = '30px Arial';
         ctx.fillText(player.emoji, player.x, player.y);
     }
@@ -971,7 +982,7 @@
 
     function handleCorrectAnswer() {
         score += 10;
-        levelSpeed += 0.1; // 레벨업 할때마다 속도 증가
+        levelSpeed += 0.15; // Slightly increase speed difficulty
         showToast("정답! +10점");
         generateLevel();
     }
@@ -993,7 +1004,8 @@
         const name = screens.nameInput.value.trim();
 
         if (!gradeNum || !classNum || !studentNum || !name) {
-            showToast("학년, 반, 번호, 이름을 모두 입력해주세요!", true); return;
+            showToast("학년, 반, 번호, 이름을 모두 입력해주세요!", true);
+            return;
         }
 
         playerInfo = {
@@ -1003,9 +1015,16 @@
         };
 
         gameWordList = playerInfo.unit === 'all' ? wordList : wordList.filter(w => parseInt(w.unit) === parseInt(playerInfo.unit));
-        if (gameWordList.length < 5) { showToast("해당 단원의 단어가 부족합니다 (최소 5개)", true); return; }
 
-        score = 0; lives = 3; levelSpeed = 1; state = 'PLAYING';
+        if (gameWordList.length < 5) {
+            showToast("해당 단원의 단어가 부족합니다 (최소 5개)", true);
+            return;
+        }
+
+        score = 0;
+        lives = 3;
+        levelSpeed = 1;
+        state = 'PLAYING';
         screens.start.classList.add('hidden');
         screens.gameOver.classList.add('hidden');
         screens.exitGameBtn.classList.remove('hidden');
@@ -1017,18 +1036,25 @@
         screens.exitGameBtn.classList.add('hidden');
         screens.finalScore.textContent = score;
         screens.gameOver.classList.remove('hidden');
+        
         screens.gameoverRecordUnit.value = playerInfo.unit; 
         
         if (currentUser && score > 0) {
             try {
-                const leaderboardRef = collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard');
+                const leaderboardRef = collection(db, 'artifacts', gameAppId, 'public', 'data', 'leaderboard');
                 await addDoc(leaderboardRef, { 
-                    gradeNum: playerInfo.gradeNum, classNum: playerInfo.classNum,
-                    studentNum: playerInfo.studentNum, name: playerInfo.name,
-                    maskedName: playerInfo.maskedName, unit: playerInfo.unit, 
-                    score: score, timestamp: serverTimestamp() 
+                    gradeNum: playerInfo.gradeNum,
+                    classNum: playerInfo.classNum,
+                    studentNum: playerInfo.studentNum,
+                    name: playerInfo.name,
+                    maskedName: playerInfo.maskedName,
+                    unit: playerInfo.unit, 
+                    score: score, 
+                    timestamp: serverTimestamp() 
                 });
-            } catch (error) { console.error("점수 저장 실패:", error); }
+            } catch (error) {
+                console.error("Failed to save score:", error);
+            }
         }
         await fetchAndRenderLeaderboard(screens.gameoverRecordUnit.value, screens.leaderboardList);
     }
@@ -1045,8 +1071,10 @@
         btn.addEventListener('mouseleave', (e) => { e.preventDefault(); keys[keyName] = false; btn.style.background = 'rgba(255,255,255,0.5)'; });
     };
 
-    setupDpad('btn-up', 'ArrowUp'); setupDpad('btn-down', 'ArrowDown');
-    setupDpad('btn-left', 'ArrowLeft'); setupDpad('btn-right', 'ArrowRight');
+    setupDpad('btn-up', 'ArrowUp');
+    setupDpad('btn-down', 'ArrowDown');
+    setupDpad('btn-left', 'ArrowLeft');
+    setupDpad('btn-right', 'ArrowRight');
 
     screens.startBtn.addEventListener('click', startGame);
     document.getElementById('restart-btn').addEventListener('click', startGame);
