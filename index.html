@@ -645,6 +645,10 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     
+    // 🔥 게임의 내부 비율을 강제로 고정하는 가상 좌표계 설정
+    const VW = 1000;
+    const VH = 1200;
+    
     let state = 'START';
     let score = 0;
     let lives = 3;
@@ -653,7 +657,7 @@
     let targetZones = [];
     
     let cars = [];
-    let logs = []; // Contains both logs and crocodiles
+    let logs = [];
     
     let playerInfo = { gradeNum: "", classNum: "", studentNum: "", name: "", maskedName: "", unit: "all" };
     let gameWordList = [];
@@ -666,41 +670,36 @@
     };
 
     const player = {
-        x: 0, y: 0, size: 30, speed: 5, emoji: "🐸",
+        x: 0, y: 0, size: 45, speed: 7, emoji: "🐸",
         reset: function() {
-            this.x = canvas.width / 2 - this.size / 2;
+            this.x = VW / 2 - this.size / 2;
             this.y = layout.safeBottomY - layout.laneHeight / 2 - this.size / 2;
         }
     };
 
     function recalculateLayout() {
-        const isMobile = window.innerWidth <= 800;
-        const bottomSafeSpace = isMobile ? 220 : 50; 
-        const availableHeight = canvas.height - bottomSafeSpace;
+        // 실제 화면 크기(window)와 무관하게 가상 공간(VH)을 기준으로 레이아웃을 계산합니다.
+        const bottomSafeSpace = 250; 
+        const availableHeight = VH - bottomSafeSpace;
 
-        // Total 7 virtual rows: 1 Safe bottom, 3 Road, 3 River
         layout.laneHeight = availableHeight / 7.5; 
+        layout.safeBottomY = VH - bottomSafeSpace;
         
-        layout.safeBottomY = canvas.height - bottomSafeSpace;
-        
-        // Road Section
         layout.roadBottom = layout.safeBottomY - layout.laneHeight; 
         layout.roadTop = layout.roadBottom - (layout.laneHeight * 3); 
         
-        // River Section
         layout.riverBottom = layout.roadTop;
         layout.riverTop = layout.riverBottom - (layout.laneHeight * 3);
 
-        // Word Target Zones
-        layout.zoneHeight = Math.min(60, canvas.height * 0.08);
-        layout.zoneY = layout.riverTop - layout.zoneHeight - 10; 
+        layout.zoneHeight = Math.min(80, VH * 0.08);
+        layout.zoneY = layout.riverTop - layout.zoneHeight - 15; 
 
         if (targetZones.length > 0) {
-            const zoneWidth = (canvas.width - 20) / 5 - 4; 
+            const zoneWidth = (VW - 40) / 5; 
             targetZones.forEach((zone, index) => {
                 zone.width = zoneWidth;
                 zone.height = layout.zoneHeight;
-                zone.x = 10 + index * (zoneWidth + 4);
+                zone.x = 10 + index * (zoneWidth + 5);
                 zone.y = layout.zoneY;
             });
         }
@@ -710,7 +709,7 @@
         const container = document.getElementById('game-container');
         canvas.width = container.clientWidth;
         canvas.height = container.clientHeight;
-        if (state === 'PLAYING') recalculateLayout();
+        // 창 크기가 변해도 가상 좌표계를 사용하므로 레이아웃을 여기서 다시 계산할 필요가 없습니다.
     }
     window.addEventListener('resize', resizeCanvas);
 
@@ -735,10 +734,10 @@
 
         let options = [currentWord, ...distractors].sort(() => Math.random() - 0.5);
 
-        const zoneWidth = (canvas.width - 20) / 5 - 4;
+        const zoneWidth = (VW - 40) / 5;
         targetZones = options.map((opt, index) => {
             return {
-                x: 10 + index * (zoneWidth + 4),
+                x: 10 + index * (zoneWidth + 5),
                 y: layout.zoneY,
                 width: zoneWidth,
                 height: layout.zoneHeight,
@@ -747,50 +746,48 @@
             };
         });
 
-        // Generate Cars (Road) with perfect looping spacing
+        // Generate Cars
         const carEmojis = ["🚗", "🚕", "🚙", "🚌", "🚓", "🚛"];
         for(let i=0; i<3; i++) {
-            let laneY = layout.roadTop + (layout.laneHeight * i) + (layout.laneHeight / 2) - 17;
+            let laneY = layout.roadTop + (layout.laneHeight * i) + (layout.laneHeight / 2) - 25;
             let direction = i % 2 === 0 ? 1 : -1;
-            let carSpeed = (Math.random() * 1.5 + 1) * levelSpeed * (canvas.width / 400); 
+            let carSpeed = (Math.random() * 2 + 1.5) * levelSpeed; 
             
             let numCars = 3;
-            let spacing = (canvas.width + 200) / numCars; 
+            let spacing = (VW + 300) / numCars; 
             
             for(let j=0; j<numCars; j++) {
                 let initialX = direction === 1 
-                    ? -100 + (j * spacing)
-                    : canvas.width + 100 - (j * spacing);
+                    ? -150 + (j * spacing)
+                    : VW + 150 - (j * spacing);
                 
                 let randomCar = carEmojis[Math.floor(Math.random() * carEmojis.length)];
-                let car = createEntity(laneY, direction, carSpeed, randomCar, 45, "car");
+                let car = createEntity(laneY, direction, carSpeed, randomCar, 80, "car");
                 car.x = initialX;
                 car.trackLength = spacing * numCars; 
                 cars.push(car);
             }
         }
 
-        // Generate Logs & Crocodiles (River) with perfect looping spacing
+        // Generate Logs & Crocodiles
         for(let i=0; i<3; i++) {
             let logY = layout.riverTop + (layout.laneHeight * i); 
             let direction = i % 2 === 0 ? -1 : 1; 
-            let logSpeed = (Math.random() * 1 + 0.8) * levelSpeed * (canvas.width / 400); 
+            let logSpeed = (Math.random() * 1.5 + 1.2) * levelSpeed; 
             
-            // 통나무 갯수를 5개로 늘리고 간격을 촘촘하게 조정
             let numLogs = 5;
-            let trackLen = canvas.width + 500; 
+            let trackLen = VW + 600; 
             let spacing = trackLen / numLogs;
             
-            // 4개의 통나무와 1개의 악어가 섞여서 생성됩니다
             let laneEmojis = ["🪵", "🪵", "🪵", "🪵", "🐊"].sort(() => Math.random() - 0.5);
             
             for(let j=0; j<numLogs; j++) {
                 let initialX = direction === 1 
-                    ? -250 + (j * spacing)
-                    : canvas.width + 250 - (j * spacing);
+                    ? -300 + (j * spacing)
+                    : VW + 300 - (j * spacing);
                 
                 let type = laneEmojis[j] === "🪵" ? "log" : "croc";
-                let w = type === "log" ? 160 : 45; 
+                let w = type === "log" ? 250 : 70; 
                 let log = createEntity(logY, direction, logSpeed, laneEmojis[j], w, type);
                 log.x = initialX;
                 log.trackLength = trackLen; 
@@ -800,7 +797,7 @@
     }
 
     function createEntity(y, dir, speed, emoji, width, type = "car") {
-        return { x: 0, y, width: width, height: 35, speed, dir, emoji, type, trackLength: 0 };
+        return { x: 0, y, width: width, height: 60, speed, dir, emoji, type, trackLength: 0 };
     }
 
     function update() {
@@ -811,34 +808,31 @@
         if (keys.ArrowLeft) player.x -= player.speed;
         if (keys.ArrowRight) player.x += player.speed;
 
-        player.x = Math.max(0, Math.min(canvas.width - player.size, player.x));
-        player.y = Math.max(0, Math.min(canvas.height - player.size, player.y));
+        // VW, VH 기준으로 화면 밖으로 못 나가게 방지
+        player.x = Math.max(0, Math.min(VW - player.size, player.x));
+        player.y = Math.max(0, Math.min(VH - player.size, player.y));
 
-        // Cars Movement & Wrapping
         cars.forEach(car => {
             car.x += car.speed * car.dir;
-            if (car.dir === 1 && car.x > canvas.width + 100) car.x -= car.trackLength;
-            if (car.dir === -1 && car.x < -100) car.x += car.trackLength;
+            if (car.dir === 1 && car.x > VW + 150) car.x -= car.trackLength;
+            if (car.dir === -1 && car.x < -150) car.x += car.trackLength;
 
             if (checkCollision(player, car, 0.7)) handleDamage("앗! 자동차에 부딪혔어요! 💥");
         });
 
-        // Logs & Crocodiles Movement & Wrapping
         let inRiver = player.y + player.size > layout.riverTop && player.y < layout.riverBottom;
         let safeOnLog = false;
         let deadByCroc = false;
 
         logs.forEach(entity => {
             entity.x += entity.speed * entity.dir;
-            // 좁혀진 간격에 맞추어 화면 바깥으로 넘어가는 기준점 수정
-            if (entity.dir === 1 && entity.x > canvas.width + 250) entity.x -= entity.trackLength;
-            if (entity.dir === -1 && entity.x < -250) entity.x += entity.trackLength;
+            if (entity.dir === 1 && entity.x > VW + 300) entity.x -= entity.trackLength;
+            if (entity.dir === -1 && entity.x < -300) entity.x += entity.trackLength;
 
             if (inRiver) {
                 let isLog = entity.type === "log";
-                // Generous vertical hitbox for logs to cover lane gaps
-                let hitY = isLog ? entity.y - 10 : entity.y; 
-                let hitH = isLog ? layout.laneHeight + 20 : entity.height;
+                let hitY = isLog ? entity.y - 15 : entity.y; 
+                let hitH = isLog ? layout.laneHeight + 30 : entity.height;
                 
                 if (player.x < entity.x + entity.width && 
                     player.x + player.size > entity.x &&
@@ -847,7 +841,7 @@
                     
                     if (isLog) {
                         safeOnLog = true;
-                        player.x += entity.speed * entity.dir; // Ride the log
+                        player.x += entity.speed * entity.dir;
                     } else if (entity.type === "croc") {
                         deadByCroc = true;
                     }
@@ -855,16 +849,11 @@
             }
         });
 
-        // River Death Logic
         if (inRiver) {
-            if (deadByCroc) {
-                handleDamage("앗! 악어에게 물렸어요! 🐊");
-            } else if (!safeOnLog) {
-                handleDamage("앗! 강물에 빠졌어요! 💦");
-            }
+            if (deadByCroc) handleDamage("앗! 악어에게 물렸어요! 🐊");
+            else if (!safeOnLog) handleDamage("앗! 강물에 빠졌어요! 💦");
         }
 
-        // Target Zones (Words) Logic
         targetZones.forEach(zone => {
             if (player.y < zone.y + zone.height && player.x + player.size > zone.x && player.x < zone.x + zone.width) {
                 if (zone.isCorrect) handleCorrectAnswer();
@@ -881,112 +870,110 @@
     }
 
     function draw() {
-        // Clear canvas with base background (Safe grass)
-        ctx.fillStyle = '#a8e6cf';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // Draw Road (Gray)
-        ctx.fillStyle = '#666';
-        ctx.fillRect(0, layout.roadTop, canvas.width, layout.roadBottom - layout.roadTop);
+        ctx.save(); // 🔥 상태 저장
         
-        // Draw River (Blue)
-        ctx.fillStyle = '#3b82f6';
-        ctx.fillRect(0, layout.riverTop, canvas.width, layout.riverBottom - layout.riverTop);
+        // 🔥 현재 화면 해상도에 맞춰 캔버스를 자동으로 압축/확대(Scaling) 합니다.
+        const scaleX = canvas.width / VW;
+        const scaleY = canvas.height / VH;
+        ctx.scale(scaleX, scaleY);
 
-        // Draw Lane Dashes on Road
+        ctx.fillStyle = '#a8e6cf';
+        ctx.fillRect(0, 0, VW, VH); // 캔버스 크기 대신 가상 너비(VW, VH) 사용
+
+        ctx.fillStyle = '#666';
+        ctx.fillRect(0, layout.roadTop, VW, layout.roadBottom - layout.roadTop);
+        
+        ctx.fillStyle = '#3b82f6';
+        ctx.fillRect(0, layout.riverTop, VW, layout.riverBottom - layout.riverTop);
+
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([15, 15]);
+        ctx.lineWidth = 3;
+        ctx.setLineDash([20, 20]);
         for(let i = 1; i < 3; i++) {
             let lineY = layout.roadTop + (layout.laneHeight * i);
             ctx.beginPath();
             ctx.moveTo(0, lineY);
-            ctx.lineTo(canvas.width, lineY);
+            ctx.lineTo(VW, lineY);
             ctx.stroke();
         }
         ctx.setLineDash([]);
 
-        if (state !== 'PLAYING') return;
+        if (state !== 'PLAYING') {
+            ctx.restore();
+            return;
+        }
 
-        // UI Header Background
         ctx.fillStyle = 'rgba(255,255,255,0.85)';
-        ctx.fillRect(0, 0, canvas.width, 70);
+        ctx.fillRect(0, 0, VW, 90);
         
-        // UI Header Text
         ctx.fillStyle = '#333';
-        ctx.font = 'bold 24px Jua';
+        ctx.font = 'bold 36px Jua';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(`목표: ${currentWord.kr}`, canvas.width / 2, 35);
+        ctx.fillText(`목표: ${currentWord.kr}`, VW / 2, 45);
 
-        ctx.font = 'bold 18px Jua';
+        ctx.font = 'bold 26px Jua';
         ctx.textAlign = 'left';
         ctx.fillStyle = '#1e3a8a';
-        ctx.fillText(`점수: ${score}`, 15, 25);
+        ctx.fillText(`점수: ${score}`, 20, 35);
         ctx.fillStyle = '#ef4444';
-        ctx.fillText("❤️".repeat(lives), 15, 50);
+        ctx.fillText("❤️".repeat(lives), 20, 70);
 
-        // Draw Word Targets
         targetZones.forEach(zone => {
             ctx.fillStyle = 'white';
             ctx.beginPath();
-            ctx.roundRect(zone.x, zone.y, zone.width, zone.height, 8);
+            ctx.roundRect(zone.x, zone.y, zone.width, zone.height, 12);
             ctx.fill();
             
             ctx.strokeStyle = '#4CAF50';
-            ctx.lineWidth = 3;
+            ctx.lineWidth = 4;
             ctx.stroke();
 
             ctx.fillStyle = '#333';
-            let fontSize = Math.max(12, Math.min(18, zone.width * 0.2)); 
+            let fontSize = Math.max(18, Math.min(28, zone.width * 0.22)); 
             ctx.font = `${fontSize}px Jua`; 
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(zone.word.en, zone.x + zone.width/2, zone.y + zone.height/2);
         });
 
-        // Draw Logs and Crocodiles
         logs.forEach(entity => {
             if (entity.type === "log") {
-                // 통나무의 위아래 두께를 키워 시각적인 위아래 간격을 좁힘 (0.7 -> 0.95)
                 const logHeight = layout.laneHeight * 0.95;
                 const logY = entity.y + (layout.laneHeight - logHeight) / 2;
                 
-                // 통나무 바탕색 (갈색)
                 ctx.fillStyle = '#8B4513';
                 ctx.beginPath();
-                ctx.roundRect(entity.x, logY, entity.width, logHeight, 15);
+                ctx.roundRect(entity.x, logY, entity.width, logHeight, 20);
                 ctx.fill();
                 
-                // 통나무 테두리 및 무늬 (진갈색)
                 ctx.strokeStyle = '#5C4033';
-                ctx.lineWidth = 3;
+                ctx.lineWidth = 4;
                 ctx.stroke();
                 
-                // 나무결 무늬
                 ctx.beginPath();
-                ctx.moveTo(entity.x + 20, logY + logHeight * 0.3);
-                ctx.lineTo(entity.x + entity.width - 20, logY + logHeight * 0.3);
-                ctx.moveTo(entity.x + 10, logY + logHeight * 0.7);
-                ctx.lineTo(entity.x + entity.width - 10, logY + logHeight * 0.7);
+                ctx.moveTo(entity.x + 30, logY + logHeight * 0.3);
+                ctx.lineTo(entity.x + entity.width - 30, logY + logHeight * 0.3);
+                ctx.moveTo(entity.x + 15, logY + logHeight * 0.7);
+                ctx.lineTo(entity.x + entity.width - 15, logY + logHeight * 0.7);
                 ctx.stroke();
             } else {
-                ctx.font = '35px Arial';
+                ctx.font = '55px Arial';
                 ctx.textAlign = 'left';
                 ctx.textBaseline = 'top';
-                ctx.fillText(entity.emoji, entity.x, entity.y + layout.laneHeight/2 - 17);
+                ctx.fillText(entity.emoji, entity.x, entity.y + layout.laneHeight/2 - 25);
             }
         });
 
-        // Draw Cars
-        ctx.font = '35px Arial';
+        ctx.font = '55px Arial';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
-        cars.forEach(car => ctx.fillText(car.emoji, car.x, car.y - 5));
+        cars.forEach(car => ctx.fillText(car.emoji, car.x, car.y - 10));
 
-        // Draw Player (Frog)
-        ctx.font = '30px Arial';
+        ctx.font = '50px Arial';
         ctx.fillText(player.emoji, player.x, player.y);
+        
+        ctx.restore(); // 🔥 렌더링 후 캔버스 압축 상태 해제
     }
 
     function gameLoop() {
