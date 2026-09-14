@@ -776,20 +776,21 @@
             let direction = i % 2 === 0 ? -1 : 1; 
             let logSpeed = (Math.random() * 1 + 0.8) * levelSpeed * (canvas.width / 400); 
             
-            // 4 entities per lane to guarantee safe paths and no empty gaps
-            let numLogs = 4;
-            let trackLen = canvas.width + 600; 
+            // 통나무 갯수를 5개로 늘리고 간격을 촘촘하게 조정
+            let numLogs = 5;
+            let trackLen = canvas.width + 500; 
             let spacing = trackLen / numLogs;
             
-            let laneEmojis = ["🪵", "🪵", "🪵", "🐊"].sort(() => Math.random() - 0.5);
+            // 4개의 통나무와 1개의 악어가 섞여서 생성됩니다
+            let laneEmojis = ["🪵", "🪵", "🪵", "🪵", "🐊"].sort(() => Math.random() - 0.5);
             
             for(let j=0; j<numLogs; j++) {
                 let initialX = direction === 1 
-                    ? -200 + (j * spacing)
-                    : canvas.width + 200 - (j * spacing);
+                    ? -250 + (j * spacing)
+                    : canvas.width + 250 - (j * spacing);
                 
                 let type = laneEmojis[j] === "🪵" ? "log" : "croc";
-                let w = type === "log" ? 160 : 45; // Log is wider!
+                let w = type === "log" ? 160 : 45; 
                 let log = createEntity(logY, direction, logSpeed, laneEmojis[j], w, type);
                 log.x = initialX;
                 log.trackLength = trackLen; 
@@ -829,8 +830,9 @@
 
         logs.forEach(entity => {
             entity.x += entity.speed * entity.dir;
-            if (entity.dir === 1 && entity.x > canvas.width + 300) entity.x -= entity.trackLength;
-            if (entity.dir === -1 && entity.x < -300) entity.x += entity.trackLength;
+            // 좁혀진 간격에 맞추어 화면 바깥으로 넘어가는 기준점 수정
+            if (entity.dir === 1 && entity.x > canvas.width + 250) entity.x -= entity.trackLength;
+            if (entity.dir === -1 && entity.x < -250) entity.x += entity.trackLength;
 
             if (inRiver) {
                 let isLog = entity.type === "log";
@@ -944,19 +946,42 @@
         });
 
         // Draw Logs and Crocodiles
-        ctx.font = '35px Arial';
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'top';
         logs.forEach(entity => {
             if (entity.type === "log") {
-                // Log is wider, repeat emoji to simulate length
-                ctx.fillText(entity.emoji + entity.emoji, entity.x, entity.y + layout.laneHeight/2 - 17);
+                // 통나무의 위아래 두께를 키워 시각적인 위아래 간격을 좁힘 (0.7 -> 0.95)
+                const logHeight = layout.laneHeight * 0.95;
+                const logY = entity.y + (layout.laneHeight - logHeight) / 2;
+                
+                // 통나무 바탕색 (갈색)
+                ctx.fillStyle = '#8B4513';
+                ctx.beginPath();
+                ctx.roundRect(entity.x, logY, entity.width, logHeight, 15);
+                ctx.fill();
+                
+                // 통나무 테두리 및 무늬 (진갈색)
+                ctx.strokeStyle = '#5C4033';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                // 나무결 무늬
+                ctx.beginPath();
+                ctx.moveTo(entity.x + 20, logY + logHeight * 0.3);
+                ctx.lineTo(entity.x + entity.width - 20, logY + logHeight * 0.3);
+                ctx.moveTo(entity.x + 10, logY + logHeight * 0.7);
+                ctx.lineTo(entity.x + entity.width - 10, logY + logHeight * 0.7);
+                ctx.stroke();
             } else {
+                ctx.font = '35px Arial';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'top';
                 ctx.fillText(entity.emoji, entity.x, entity.y + layout.laneHeight/2 - 17);
             }
         });
 
         // Draw Cars
+        ctx.font = '35px Arial';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
         cars.forEach(car => ctx.fillText(car.emoji, car.x, car.y - 5));
 
         // Draw Player (Frog)
