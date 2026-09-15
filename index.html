@@ -673,26 +673,32 @@
         x: 0, y: 0, size: 45, speed: 7, emoji: "🐸",
         reset: function() {
             this.x = VW / 2 - this.size / 2;
-            this.y = layout.safeBottomY - layout.laneHeight / 2 - this.size / 2;
+            // 줄어든 하단 안전구역의 정중앙에 배치
+            this.y = layout.safeBottomY + (VH - layout.safeBottomY) / 2 - this.size / 2; 
         }
     };
 
     function recalculateLayout() {
-        // 실제 화면 크기(window)와 무관하게 가상 공간(VH)을 기준으로 레이아웃을 계산합니다.
-        const bottomSafeSpace = 250; 
-        const availableHeight = VH - bottomSafeSpace;
-
-        layout.laneHeight = availableHeight / 7.5; 
-        layout.safeBottomY = VH - bottomSafeSpace;
+        // 명시적인 탑다운(Top-down) 방식으로 레이아웃을 고정 계산하여 상단 겹침 방지
+        const topUIHeight = 110; // 상단 점수, 목표 단어, 하트 표시 공간
         
-        layout.roadBottom = layout.safeBottomY - layout.laneHeight; 
-        layout.roadTop = layout.roadBottom - (layout.laneHeight * 3); 
+        layout.zoneHeight = 80; // 정답 구역 블록 높이
+        layout.zoneY = topUIHeight + 10; // 상단 UI 바로 아래에 정답 구역 배치
         
-        layout.riverBottom = layout.roadTop;
-        layout.riverTop = layout.riverBottom - (layout.laneHeight * 3);
-
-        layout.zoneHeight = Math.min(80, VH * 0.08);
-        layout.zoneY = layout.riverTop - layout.zoneHeight - 15; 
+        layout.riverTop = layout.zoneY + layout.zoneHeight + 15; 
+        
+        // ⬇️ 아랫쪽 빈 공간을 기존 220에서 120으로 대폭 축소하여 게임 구역 확대
+        const bottomSafeSpace = 120; 
+        const availableHeightForLanes = VH - layout.riverTop - bottomSafeSpace;
+        
+        // 강물 3줄 + 도로 3줄 = 총 6줄
+        layout.laneHeight = availableHeightForLanes / 6; 
+        
+        layout.riverBottom = layout.riverTop + (layout.laneHeight * 3);
+        layout.roadTop = layout.riverBottom;
+        layout.roadBottom = layout.roadTop + (layout.laneHeight * 3);
+        
+        layout.safeBottomY = layout.roadBottom;
 
         if (targetZones.length > 0) {
             const zoneWidth = (VW - 40) / 5; 
@@ -766,10 +772,11 @@
                 car.x = initialX;
                 car.trackLength = spacing * numCars; 
                 cars.push(car);
-            }
-        }
+            } // 누락되었던 괄호 추가
+        } // 누락되었던 괄호 추가
 
-        // Generate Logs & Crocodiles
+        // Generate Logs & Dangerous Enemies
+        const enemyList = ["🐊", "🐍", "🦈", "🦛"]; // 악어, 뱀, 상어, 하마 추가
         for(let i=0; i<3; i++) {
             let logY = layout.riverTop + (layout.laneHeight * i); 
             let direction = i % 2 === 0 ? -1 : 1; 
@@ -779,15 +786,17 @@
             let trackLen = VW + 600; 
             let spacing = trackLen / numLogs;
             
-            let laneEmojis = ["🪵", "🪵", "🪵", "🪵", "🐊"].sort(() => Math.random() - 0.5);
+            // 랜덤 위험 동물 선택 후 통나무와 섞기
+            let randomEnemy = enemyList[Math.floor(Math.random() * enemyList.length)];
+            let laneEmojis = ["🪵", "🪵", "🪵", "🪵", randomEnemy].sort(() => Math.random() - 0.5);
             
             for(let j=0; j<numLogs; j++) {
                 let initialX = direction === 1 
                     ? -300 + (j * spacing)
                     : VW + 300 - (j * spacing);
                 
-                let type = laneEmojis[j] === "🪵" ? "log" : "croc";
-                let w = type === "log" ? 250 : 70; 
+                let type = laneEmojis[j] === "🪵" ? "log" : "enemy";
+                let w = type === "log" ? 250 : 90; // 위험 동물 히트박스(너비)도 더 크게 설정
                 let log = createEntity(logY, direction, logSpeed, laneEmojis[j], w, type);
                 log.x = initialX;
                 log.trackLength = trackLen; 
@@ -822,7 +831,8 @@
 
         let inRiver = player.y + player.size > layout.riverTop && player.y < layout.riverBottom;
         let safeOnLog = false;
-        let deadByCroc = false;
+        let deadByEnemy = false;
+        let killerEmoji = "";
 
         logs.forEach(entity => {
             entity.x += entity.speed * entity.dir;
@@ -834,6 +844,11 @@
                 let hitY = isLog ? entity.y - 15 : entity.y; 
                 let hitH = isLog ? layout.laneHeight + 30 : entity.height;
                 
+                // 위험 동물은 크기가 커졌으므로 히트박스(상하)도 레인 높이에 맞춤
+                if (entity.type === "enemy") {
+                    hitH = layout.laneHeight; 
+                }
+                
                 if (player.x < entity.x + entity.width && 
                     player.x + player.size > entity.x &&
                     player.y < hitY + hitH && 
@@ -842,15 +857,16 @@
                     if (isLog) {
                         safeOnLog = true;
                         player.x += entity.speed * entity.dir;
-                    } else if (entity.type === "croc") {
-                        deadByCroc = true;
+                    } else if (entity.type === "enemy") {
+                        deadByEnemy = true;
+                        killerEmoji = entity.emoji;
                     }
                 }
             }
         });
 
         if (inRiver) {
-            if (deadByCroc) handleDamage("앗! 악어에게 물렸어요! 🐊");
+            if (deadByEnemy) handleDamage(`앗! ${killerEmoji}에게 당했어요! 💥`);
             else if (!safeOnLog) handleDamage("앗! 강물에 빠졌어요! 💦");
         }
 
@@ -904,20 +920,20 @@
         }
 
         ctx.fillStyle = 'rgba(255,255,255,0.85)';
-        ctx.fillRect(0, 0, VW, 90);
+        ctx.fillRect(0, 0, VW, 110); // 상단 UI 배경 공간 넉넉히 확보
         
         ctx.fillStyle = '#333';
-        ctx.font = 'bold 36px Jua';
+        ctx.font = 'bold 44px Jua';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(`목표: ${currentWord.kr}`, VW / 2, 45);
+        ctx.fillText(`목표: ${currentWord.kr}`, VW / 2, 55);
 
-        ctx.font = 'bold 26px Jua';
+        ctx.font = 'bold 30px Jua';
         ctx.textAlign = 'left';
         ctx.fillStyle = '#1e3a8a';
         ctx.fillText(`점수: ${score}`, 20, 35);
         ctx.fillStyle = '#ef4444';
-        ctx.fillText("❤️".repeat(lives), 20, 70);
+        ctx.fillText("❤️".repeat(lives), 20, 80);
 
         targetZones.forEach(zone => {
             ctx.fillStyle = 'white';
@@ -958,10 +974,11 @@
                 ctx.lineTo(entity.x + entity.width - 15, logY + logHeight * 0.7);
                 ctx.stroke();
             } else {
-                ctx.font = '55px Arial';
-                ctx.textAlign = 'left';
-                ctx.textBaseline = 'top';
-                ctx.fillText(entity.emoji, entity.x, entity.y + layout.laneHeight/2 - 25);
+                // 위험 동물 렌더링 (크기 및 중앙 정렬 강화)
+                ctx.font = '80px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(entity.emoji, entity.x + entity.width / 2, entity.y + layout.laneHeight / 2);
             }
         });
 
