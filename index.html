@@ -1092,8 +1092,22 @@
         await fetchAndRenderLeaderboard(screens.gameoverRecordUnit.value, screens.leaderboardList);
     }
 
-    window.addEventListener('keydown', e => { if(keys.hasOwnProperty(e.code)) keys[e.code] = true; });
-    window.addEventListener('keyup', e => { if(keys.hasOwnProperty(e.code)) keys[e.code] = false; });
+    const keyMap = {
+        'ArrowUp': 'ArrowUp', 'KeyW': 'ArrowUp', 'w': 'ArrowUp', 'W': 'ArrowUp',
+        'ArrowDown': 'ArrowDown', 'KeyS': 'ArrowDown', 's': 'ArrowDown', 'S': 'ArrowDown',
+        'ArrowLeft': 'ArrowLeft', 'KeyA': 'ArrowLeft', 'a': 'ArrowLeft', 'A': 'ArrowLeft',
+        'ArrowRight': 'ArrowRight', 'KeyD': 'ArrowRight', 'd': 'ArrowRight', 'D': 'ArrowRight'
+    };
+
+    window.addEventListener('keydown', e => { 
+        const mappedKey = keyMap[e.code] || keyMap[e.key];
+        if(mappedKey && keys.hasOwnProperty(mappedKey)) keys[mappedKey] = true; 
+    });
+    
+    window.addEventListener('keyup', e => { 
+        const mappedKey = keyMap[e.code] || keyMap[e.key];
+        if(mappedKey && keys.hasOwnProperty(mappedKey)) keys[mappedKey] = false; 
+    });
 
     const setupDpad = (btnId, keyName) => {
         const btn = document.getElementById(btnId);
